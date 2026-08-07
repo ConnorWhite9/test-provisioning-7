@@ -1,0 +1,12 @@
+{
+  "schema": "cofabric.task_status.v1",
+  "task_number": 3,
+  "title": "Implement REST API Handlers for Workloads and Nodes",
+  "status": "pending",
+  "priority": "high",
+  "description": "",
+  "completion_summary": null,
+  "pr_url": null,
+  "pr_doc": null,
+  "updated_at": "2026-08-07T20:32:04.577Z"
+}
