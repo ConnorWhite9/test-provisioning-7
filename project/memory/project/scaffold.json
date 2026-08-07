@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "cofabric.memory.scaffold.v1",
+  "fileTree": [
+    {
+      "path": "go.mod",
+      "purpose": "Go module definition for github.com/container-orchestration/system with all runtime dependencies declared",
+      "isEmpty": false
+    },
+    {
+      "path": ".env.example",
+      "purpose": "All configuration variables with descriptions for control plane, etcd, agent, Docker, controller, scheduler, CLI, and logging",
+      "isEmpty": false
+    },
+    {
+      "path": "Makefile",
+      "purpose": "Build targets: make all runs proto then build; targets for proto codegen, building all three binaries, test, and run shortcuts",
+      "isEmpty": false
+    },
+    {
+      "path": "cmd/control-plane/main.go",
+      "purpose": "Control plane entry point; placeholder for state store + API + controller init; blocks until wired",
+      "isEmpty": true
+    },
+    {
+      "path": "cmd/agent/main.go",
+      "purpose": "Node agent entry point; placeholder for Docker client + gRPC + heartbeat; blocks until wired",
+      "isEmpty": true
+    },
+    {
+      "path": "cmd/orchctl/main.go",
+      "purpose": "Cobra root command for CLI; subcommands added by feature tasks",
+      "isEmpty": true
+    },
+    {
+      "path": "internal/store/store.go",
+      "purpose": "Store interface plus Node, Workload, Instance, WatchEvent domain types; canonical domain types for the whole project",
+      "isEmpty": false
+    },
+    {
+      "path": "internal/scheduler/scheduler.go",
+      "purpose": "Scheduler struct with Schedule(ctx, workload) method; filter-then-score node selection stub ready to be called",
+      "isEmpty": true
+    },
+    {
+      "path": "internal/controller/manager.go",
+      "purpose": "Manager struct with Run(ctx) stub; replica and node-health loops to be added in feature tasks",
+      "isEmpty": true
+    },
+    {
+      "path": "internal/api/rest/server.go",
+      "purpose": "Gin server with all REST routes registered as stubs returning 501; handleHealthz returns 200",
+      "isEmpty": true
+    },
+    {
+      "path": "proto/orchestration.proto",
+      "purpose": "Complete proto definition for AgentService: RegisterNode, Heartbeat, ReportInstanceStatus, StreamInstructions",
+      "isEmpty": false
+    },
+    {
+      "path": "internal/proto/.gitkeep",
+      "purpose": "Output directory placeholder for make proto codegen",
+      "isEmpty": true
+    },
+    {
+      "path": "README.md",
+      "purpose": "Architecture diagram, component table, quick-start guide, env var reference, build phase summary",
+      "isEmpty": false
+    },
+    {
+      "path": "pr-docs/.gitkeep",
+      "purpose": "Placeholder directory for PR documentation",
+      "isEmpty": true
+    },
+    {
+      "path": "memory/.gitkeep",
+      "purpose": "Placeholder for memory directory",
+      "isEmpty": true
+    },
+    {
+      "path": "memory/project/.gitkeep",
+      "purpose": "Placeholder for project-level memory files",
+      "isEmpty": true
+    },
+    {
+      "path": "memory/task/.gitkeep",
+      "purpose": "Placeholder for task-level memory files",
+      "isEmpty": true
+    },
+    {
+      "path": "memory/agent/.gitkeep",
+      "purpose": "Placeholder for agent-level memory files",
+      "isEmpty": true
+    },
+    {
+      "path": "memory/context/.gitkeep",
+      "purpose": "Placeholder for context-level memory files",
+      "isEmpty": true
+    }
+  ],
+  "libraryExports": [
+    {
+      "file": "internal/store/store.go",
+      "exports": [
+        "Store",
+        "Node",
+        "Workload",
+        "Instance",
+        "WatchEvent"
+      ]
+    },
+    {
+      "file": "internal/scheduler/scheduler.go",
+      "exports": [
+        "Scheduler"
+      ]
+    },
+    {
+      "file": "internal/controller/manager.go",
+      "exports": [
+        "Manager"
+      ]
+    },
+    {
+      "file": "internal/api/rest/server.go",
+      "exports": []
+    }
+  ],
+  "existingRoutes": [
+    {
+      "type": "api",
+      "path": "/healthz",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET"
+      ],
+      "isEmpty": false
+    },
+    {
+      "type": "api",
+      "path": "/api/v1/workloads",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "isEmpty": true
+    },
+    {
+      "type": "api",
+      "path": "/api/v1/workloads/:name",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "isEmpty": true
+    },
+    {
+      "type": "api",
+      "path": "/api/v1/nodes",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET"
+      ],
+      "isEmpty": true
+    },
+    {
+      "type": "api",
+      "path": "/api/v1/nodes/:id",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET"
+      ],
+      "isEmpty": true
+    },
+    {
+      "type": "api",
+      "path": "/api/v1/workloads/:name/logs",
+      "file": "internal/api/rest/server.go",
+      "httpMethods": [
+        "GET"
+      ],
+      "isEmpty": true
+    }
+  ],
+  "databaseState": {
+    "migrationsExist": false,
+    "tables": []
+  },
+  "intentionallyEmpty": [
+    {
+      "file": "cmd/control-plane/main.go",
+      "intendedPurpose": "Wire together state store, REST API server, gRPC server, scheduler, and controller manager; start the control plane process"
+    },
+    {
+      "file": "cmd/agent/main.go",
+      "intendedPurpose": "Wire together Docker client, gRPC client to control plane, heartbeat loop, instruction stream consumer, and status reporter"
+    },
+    {
+      "file": "cmd/orchctl/main.go",
+      "intendedPurpose": "Add Cobra subcommands: create workload, get workloads, get nodes, describe workload, scale workload, delete workload, logs"
+    },
+    {
+      "file": "internal/scheduler/scheduler.go",
+      "intendedPurpose": "Implement filter-then-score node selection logic in Schedule(ctx, workload) returning (nodeID string, error)"
+    },
+    {
+      "file": "internal/controller/manager.go",
+      "intendedPurpose": "Implement replica controller loop and node health controller loop inside Run(ctx) on configurable interval"
+    },
+    {
+      "file": "internal/api/rest/server.go",
+      "intendedPurpose": "Fill in 501 stub handlers for workload CRUD, node listing, log proxying; add input validation and error mapping"
+    },
+    {
+      "file": "internal/proto/.gitkeep",
+      "intendedPurpose": "Receive generated Go protobuf/gRPC code output from make proto"
+    }
+  ]
+}

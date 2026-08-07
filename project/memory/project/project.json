@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "cofabric.memory.project.v2",
+  "name": "Container Orchestration System",
+  "oneLineDescription": "A simplified Kubernetes-inspired container orchestration system for learning and demonstration purposes.",
+  "whatItIs": "A Go-based container orchestration system that manages containerized workloads across a cluster of worker nodes. It implements core Kubernetes concepts including a control plane with state store, scheduler, and controller manager; a node agent daemon that manages local containers via Docker; a REST API for external interaction; a gRPC API for agent-control plane communication; and a kubectl-style CLI tool. The system supports automated deployment, manual scaling, and basic self-healing (automatic rescheduling on node failure). It is explicitly a learning and demonstration system — not a production Kubernetes replacement — implementing simplified versions of core orchestration concepts.",
+  "stack": [
+    {
+      "name": "Go",
+      "version": "1.22",
+      "purpose": "Primary implementation language"
+    },
+    {
+      "name": "go.etcd.io/etcd/client/v3",
+      "version": "v3.5.13",
+      "purpose": "Embedded single-node cluster state store"
+    },
+    {
+      "name": "google.golang.org/grpc",
+      "version": "v1.63.2",
+      "purpose": "Agent-to-control-plane binary communication"
+    },
+    {
+      "name": "google.golang.org/protobuf",
+      "version": "v1.34.1",
+      "purpose": "Protocol buffer serialization for gRPC"
+    },
+    {
+      "name": "github.com/docker/docker",
+      "version": "v25.0.5",
+      "purpose": "Container lifecycle management via Docker Engine API"
+    },
+    {
+      "name": "github.com/gin-gonic/gin",
+      "version": "v1.10.0",
+      "purpose": "REST API server"
+    },
+    {
+      "name": "github.com/spf13/cobra",
+      "version": "v1.8.0",
+      "purpose": "CLI framework for orchctl tool"
+    },
+    {
+      "name": "go.uber.org/zap",
+      "version": "v1.27.0",
+      "purpose": "Structured logging"
+    },
+    {
+      "name": "github.com/google/uuid",
+      "version": "v1.6.0",
+      "purpose": "ID generation for nodes, workloads, and instances"
+    }
+  ],
+  "externalIntegrations": [
+    {
+      "service": "Docker Engine",
+      "envVars": [
+        "DOCKER_HOST"
+      ],
+      "clientLocation": "internal/agent/docker.go"
+    },
+    {
+      "service": "etcd (embedded)",
+      "envVars": [
+        "ETCD_DATA_DIR",
+        "ETCD_LISTEN_CLIENT_URLS",
+        "ETCD_LISTEN_PEER_URLS",
+        "ETCD_ADVERTISE_CLIENT_URLS"
+      ],
+      "clientLocation": "internal/store/etcd.go"
+    }
+  ],
+  "coreUserFlows": [
+    "An operator creates a workload via CLI, which the control plane schedules onto available worker nodes and the agents start as containers.",
+    "An operator scales a workload via CLI, and the controller manager reconciles by scheduling additional instances or terminating excess ones.",
+    "A worker node stops sending heartbeats, the node health controller marks it offline, and all its instances are automatically rescheduled onto healthy nodes.",
+    "An operator retrieves logs for a workload via CLI, which the REST API proxies from the relevant node agents."
+  ],
+  "outOfScope": [
+    "Authentication, authorization, TLS, and RBAC",
+    "Persistent volumes or storage management",
+    "ConfigMaps, Secrets, or environment variable injection",
+    "DNS-based service discovery or Service abstraction",
+    "Ingress and L7 load balancing",
+    "Namespaces — system uses a single flat namespace",
+    "Rolling updates — replace-all strategy only",
+    "Resource enforcement via cgroups — resource requests tracked only",
+    "Multi-container pods, DaemonSets, StatefulSets, and Jobs",
+    "Helm or templating",
+    "Web UI",
+    "High availability control plane",
+    "Private container registry support",
+    "Log aggregation or historical log storage"
+  ],
+  "dataModel": [
+    {
+      "entity": "nodes",
+      "purpose": "Stores registered worker node information including identity, address, health, and resource capacity.",
+      "keyFields": [
+        "identifier",
+        "network_address",
+        "health_status",
+        "resource_capacity"
+      ]
+    },
+    {
+      "entity": "workloads",
+      "purpose": "Stores user-defined application specifications including the container image and desired replica count.",
+      "keyFields": [
+        "name",
+        "container_image",
+        "desired_replica_count",
+        "resource_requests"
+      ]
+    },
+    {
+      "entity": "instances",
+      "purpose": "Stores the state of each running container instance, linking it to its parent workload and assigned node.",
+      "keyFields": [
+        "parent_workload",
+        "assigned_node",
+        "runtime_status",
+        "health_state"
+      ]
+    }
+  ],
+  "crossCuttingPrinciples": [
+    "All state mutations flow exclusively through the Control Plane API — no component accesses the state store directly from outside the control plane.",
+    "The store.Store interface is injected into all components; the etcd implementation satisfies this interface, enabling substitution.",
+    "No authentication or authorization is implemented anywhere in the system — it is explicitly out of scope.",
+    "Structured logging via go.uber.org/zap is used throughout; a *zap.Logger is passed as a constructor argument to all components.",
+    "The scheduler is deterministic: given the same node and workload inputs, it always produces the same placement decision.",
+    "The node agent executes instructions only and never makes scheduling decisions — all scheduling logic lives in the control plane.",
+    "Controller loops run on a configurable interval (default 10 seconds) and process workloads independently so one failing workload cannot block others.",
+    "Domain types store.Node, store.Workload, and store.Instance defined in internal/store/store.go are the canonical types used across all components.",
+    "Optimistic concurrency control via a version field is used in the state store to detect concurrent modification conflicts."
+  ],
+  "specSummary": "The Container Orchestration System is a Go-based learning and demonstration project that implements simplified versions of core Kubernetes orchestration concepts. It manages containerized workloads across a cluster of worker nodes using a control plane / data plane split. The control plane consists of four components: an etcd-backed cluster state store (Feature 1), a gRPC+REST API server (Feature 5), a filter-then-score scheduler (Feature 3), and a controller manager running replica and node-health reconciliation loops (Feature 4). Each worker node runs a node agent daemon (Feature 2) that registers with the control plane, pulls and manages containers via the local Docker Engine, sends periodic heartbeats, and reports status changes over gRPC. A Cobra-based CLI tool (Feature 7) provides kubectl-style commands for operators, communicating exclusively over REST. An optional overlay networking layer (Feature 6) using VXLAN tunnels and Linux bridges enables cross-node container communication. The system is built in phases: state store first, then control plane API and scheduler in parallel, then node agent, then controller manager, then CLI, and finally networking. Key constraints include: no authentication anywhere, no persistent volumes, no rolling updates, no service discovery, no namespaces, single control plane node, Docker Hub images only, and resource requests tracked but not cgroup-enforced. All domain types are defined in internal/store/store.go, all components receive a store.Store interface via constructor injection, and structured logging via zap is used throughout."
+}
