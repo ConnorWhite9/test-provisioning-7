@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package orchestration;
+
+option go_package = "github.com/container-orchestration/system/internal/proto";
+
+// AgentService handles all communication from node agents to the control plane.
+service AgentService {
+  // RegisterNode is called once by each agent on startup.
+  rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse);
+
+  // Heartbeat is called periodically by each agent.
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // ReportInstanceStatus is called when a container's state changes.
+  rpc ReportInstanceStatus(ReportInstanceStatusRequest) returns (ReportInstanceStatusResponse);
+
+  // StreamInstructions opens a long-lived stream for receiving start/stop instructions.
+  rpc StreamInstructions(StreamInstructionsRequest) returns (stream Instruction);
+}
+
+message RegisterNodeRequest {
+  string node_id       = 1;
+  string node_name     = 2;
+  string address       = 3;
+  int64  cpu_capacity  = 4; // millicores
+  int64  mem_capacity  = 5; // bytes
+}
+
+message RegisterNodeResponse {
+  bool   accepted     = 1;
+  string message      = 2;
+}
+
+message HeartbeatRequest {
+  string node_id    = 1;
+  int64  timestamp  = 2; // Unix epoch seconds
+}
+
+message HeartbeatResponse {
+  bool ok = 1;
+}
+
+message ReportInstanceStatusRequest {
+  string instance_id   = 1;
+  string container_id  = 2;
+  string status        = 3; // pending | running | stopped | failed | unknown
+}
+
+message ReportInstanceStatusResponse {
+  bool acknowledged = 1;
+}
+
+message StreamInstructionsRequest {
+  string node_id = 1;
+}
+
+message Instruction {
+  string instruction_id = 1;
+  string type           = 2; // start | stop
+  string instance_id    = 3;
+  string workload_name  = 4;
+  string image          = 5;
+  int64  cpu_request    = 6;
+  int64  mem_request    = 7;
+}
